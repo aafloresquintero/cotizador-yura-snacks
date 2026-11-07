@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cotizador Yura Snacks</title>
+<style>
+  :root {
+    --oliva: #6b7a3a;
+    --oliva-oscuro: #4f5c27;
+    --arena: #f1e8d4;
+    --arena-claro: #f8f3e6;
+    --blanco: #ffffff;
+    --texto: #3a3f26;
+    --borde: #dcd1b4;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 16px;
+    background: var(--arena);
+    color: var(--texto);
+    font-family: ui-rounded, "SF Pro Rounded", "Nunito", "Quicksand", "Varela Round", "Segoe UI", system-ui, sans-serif;
+    min-height: 100vh;
+    min-height: 100dvh; /* en celulares descuenta la barra del navegador */
+  }
+  .app {
+    max-width: 440px;
+    margin: 0 auto;
+  }
+  header {
+    text-align: center;
+    margin-bottom: 14px;
+  }
+  header h1 {
+    margin: 0;
+    font-size: 1.6rem;
+    color: var(--oliva-oscuro);
+    letter-spacing: 0.3px;
+  }
+  header p {
+    margin: 2px 0 0;
+    font-size: 0.9rem;
+    opacity: 0.8;
+  }
+  .tarjeta {
+    background: var(--blanco);
+    border-radius: 20px;
+    padding: 18px;
+    box-shadow: 0 4px 14px rgba(79, 92, 39, 0.12);
+  }
+  label {
+    display: block;
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin: 0 0 6px;
+    color: var(--oliva-oscuro);
+  }
+  .campo { margin-bottom: 14px; }
+  select, input[type="number"] {
+    width: 100%;
+    font: inherit;
+    font-size: 1rem;
+    padding: 12px 14px;
+    border: 2px solid var(--borde);
+    border-radius: 14px;
+    background: var(--arena-claro);
+    color: var(--texto);
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  select {
+    background-image: linear-gradient(45deg, transparent 50%, var(--oliva) 50%),
+                      linear-gradient(135deg, var(--oliva) 50%, transparent 50%);
+    background-position: calc(100% - 20px) 55%, calc(100% - 14px) 55%;
+    background-size: 6px 6px, 6px 6px;
+    background-repeat: no-repeat;
+    padding-right: 36px;
+  }
+  select:focus, input:focus {
+    outline: none;
+    border-color: var(--oliva);
+  }
+  button {
+    font: inherit;
+    font-weight: 700;
+    font-size: 1.05rem;
+    border: none;
+    border-radius: 14px;
+    padding: 14px;
+    width: 100%;
+    cursor: pointer;
+    transition: transform 0.08s ease, background 0.15s ease;
+  }
+  button:active { transform: scale(0.98); }
+  #btnCalcular {
+    background: var(--oliva);
+    color: var(--blanco);
+  }
+  #btnCalcular:hover { background: var(--oliva-oscuro); }
+  #btnCopiar {
+    background: var(--arena);
+    color: var(--oliva-oscuro);
+    border: 2px solid var(--oliva);
+    margin-top: 10px;
+  }
+  .error {
+    color: #9a3b2b;
+    font-size: 0.88rem;
+    margin: -6px 0 10px;
+    min-height: 1em;
+  }
+  #resultado {
+    display: none;
+    margin-top: 16px;
+    background: var(--arena-claro);
+    border: 2px dashed var(--oliva);
+    border-radius: 16px;
+    padding: 14px;
+  }
+  #resultado.visible { display: block; }
+  .total {
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  .total small { display: block; font-size: 0.82rem; opacity: 0.8; }
+  .total strong {
+    font-size: 2rem;
+    color: var(--oliva-oscuro);
+  }
+  .etiqueta-copia {
+    font-size: 0.8rem;
+    opacity: 0.8;
+    margin-bottom: 4px;
+  }
+  pre {
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font: inherit;
+    font-size: 0.95rem;
+    line-height: 1.45;
+  }
+  .aviso {
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--oliva-oscuro);
+    min-height: 1.2em;
+    margin-top: 8px;
+    font-weight: 700;
+  }
+</style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>🌾 Cotizador Yura Snacks</h1>
+      <p>Arma la cotización en segundos</p>
+    </header>
+
+    <div class="tarjeta">
+      <div class="campo">
+        <label for="producto">Producto</label>
+        <!-- Las opciones se arman desde la lista PRODUCTOS del script -->
+        <select id="producto"></select>
+      </div>
+
+      <div class="campo">
+        <label for="cantidad">Cantidad</label>
+        <input type="number" id="cantidad" min="1" step="1" value="1" inputmode="numeric" enterkeyhint="go">
+      </div>
+
+      <div class="campo">
+        <label for="canal">Canal de entrega</label>
+        <!-- Las opciones se arman desde la lista CANALES del script -->
+        <select id="canal"></select>
+      </div>
+
+      <div class="error" id="error" role="alert"></div>
+
+      <button id="btnCalcular" type="button">Calcular</button>
+
+      <div id="resultado" aria-live="polite">
+        <div class="total">
+          <small>Total a pagar</small>
+          <strong id="totalTexto">S/ 0.00</strong>
+        </div>
+        <div class="etiqueta-copia">Texto que se copia:</div>
+        <pre id="resumen"></pre>
+        <button id="btnCopiar" type="button">Copiar resumen</button>
+        <div class="aviso" id="aviso"></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // ÚNICO lugar donde se cambian precios, nombres y costos de entrega.
+  // La lista desplegable y el cálculo se arman a partir de estos datos.
+  const PRODUCTOS = {
+    kiwicha:     { nombre: "Barra Kiwicha y Cacao",   precio: 8 },
+    quinua:      { nombre: "Barra Quinua Original",   precio: 7 },
+    packKiwicha: { nombre: "Pack x5 Kiwicha y Cacao", precio: 35 },
+    packQuinua:  { nombre: "Pack x5 Quinua Original", precio: 30 }
+  };
+  const CANALES = {
+    recojo:   { nombre: "Recojo en punto de venta", costo: 0 },
+    delivery: { nombre: "Delivery en Lima",         costo: 5 }
+  };
+
+  const $ = (id) => document.getElementById(id);
+  const soles = (n) => "S/ " + n.toFixed(2);
+  const solesCorto = (n) => Number.isInteger(n) ? "S/ " + n : soles(n);
+
+  // Llena las listas desplegables con los datos de arriba
+  function llenarLista(select, datos, etiqueta) {
+    Object.keys(datos).forEach((clave) => {
+      select.add(new Option(etiqueta(datos[clave]), clave));
+    });
+  }
+  llenarLista($("producto"), PRODUCTOS, (p) => p.nombre + " — " + solesCorto(p.precio));
+  llenarLista($("canal"), CANALES, (c) =>
+    c.nombre + (c.costo > 0 ? " (+ " + solesCorto(c.costo) + ")" : " (sin costo)"));
+
+  let textoActual = "";
+
+  function ocultarResultado() {
+    $("resultado").classList.remove("visible");
+    $("aviso").textContent = "";
+    $("error").textContent = "";
+    textoActual = "";
+  }
+
+  function calcular() {
+    const cantidad = Number($("cantidad").value);
+    if (!Number.isInteger(cantidad) || cantidad < 1) {
+      ocultarResultado();
+      $("error").textContent = "La cantidad debe ser un número entero de 1 o más.";
+      return;
+    }
+    $("error").textContent = "";
+
+    const prod = PRODUCTOS[$("producto").value];
+    const canal = CANALES[$("canal").value];
+    const total = prod.precio * cantidad + canal.costo;
+
+    // Mismo texto en pantalla y en el portapapeles
+    textoActual = "Pedido: " + cantidad + " x " + prod.nombre +
+                  ", canal: " + canal.nombre +
+                  ", total: S/ " + total.toFixed(2);
+
+    $("totalTexto").textContent = soles(total);
+    $("resumen").textContent = textoActual;
+    $("aviso").textContent = "";
+    $("resultado").classList.add("visible");
+  }
+
+  function copiar() {
+    if (!textoActual) return;
+    const texto = textoActual;
+    const ok = () => { $("aviso").textContent = "¡Copiado! Pégalo en WhatsApp ✅"; };
+    const fallo = () => { $("aviso").textContent = "No se pudo copiar. Mantén presionado el texto para copiarlo."; };
+
+    // Método de respaldo, compatible con Safari de iPhone
+    const respaldo = () => {
+      const ta = document.createElement("textarea");
+      ta.value = texto;
+      ta.contentEditable = true;
+      ta.readOnly = false;
+      ta.style.position = "fixed";
+      ta.style.top = "0";
+      ta.style.left = "0";
+      ta.style.opacity = "0";
+      ta.style.fontSize = "16px";
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      const rango = document.createRange();
+      rango.selectNodeContents(ta);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(rango);
+      ta.setSelectionRange(0, 999999);
+      let copiado = false;
+      try { copiado = document.execCommand("copy"); } catch (e) { copiado = false; }
+      sel.removeAllRanges();
+      document.body.removeChild(ta);
+      copiado ? ok() : fallo();
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(texto).then(ok).catch(respaldo);
+    } else {
+      respaldo();
+    }
+  }
+
+  $("btnCalcular").addEventListener("click", calcular);
+  $("btnCopiar").addEventListener("click", copiar);
+
+  // La tecla "Ir" o "Enter" del teclado numérico también calcula
+  $("cantidad").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      calcular();
+      e.target.blur();
+    }
+  });
+
+  // Si cambias algún dato, el resultado anterior (y cualquier aviso) se borra
+  ["producto", "cantidad", "canal"].forEach((id) => {
+    $(id).addEventListener("input", ocultarResultado);
+    $(id).addEventListener("change", ocultarResultado);
+  });
+</script>
+</body>
+</html>
